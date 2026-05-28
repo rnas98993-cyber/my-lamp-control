@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Home Kontrol ULN2803</title>
+    <script src="https://cloudflare.com"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f9; padding: 20px; }
+        .relay-card { background: white; padding: 15px; margin: 15px auto; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn { padding: 12px 24px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; color: white; font-weight: bold; margin: 5px; min-width: 110px; }
+        .on { background-color: #2ecc71; }
+        .off { background-color: #e74c3c; }
+        h3 { margin-top: 0; color: #333; }
+        #status { font-weight: bold; color: orange; }
+    </style>
+</head>
+<body>
+
+    <h1>Smart Home Web Control</h1>
+    <p>Status Server: <span id="status">Menghubungkan...</span></p>
+    
+    <div class="relay-card">
+        <h3>Lampu 1 (GPIO 0)</h3>
+        <button class="on" onclick="kirimPerintah(0, '1')">NYALAKAN</button>
+        <button class="off" onclick="kirimPerintah(0, '0')">MATIKAN</button>
+    </div>
+
+    <div class="relay-card">
+        <h3>Lampu 2 (GPIO 1)</h3>
+        <button class="on" onclick="kirimPerintah(1, '1')">NYALAKAN</button>
+        <button class="off" onclick="kirimPerintah(1, '0')">MATIKAN</button>
+    </div>
+
+    <div class="relay-card">
+        <h3>Lampu 3 (GPIO 12)</h3>
+        <button class="on" onclick="kirimPerintah(2, '1')">NYALAKAN</button>
+        <button class="off" onclick="kirimPerintah(2, '0')">MATIKAN</button>
+    </div>
+
+    <div class="relay-card">
+        <h3>Lampu 4 (GPIO 18)</h3>
+        <button class="on" onclick="kirimPerintah(3, '1')">NYALAKAN</button>
+        <button class="off" onclick="kirimPerintah(3, '0')">MATIKAN</button>
+    </div>
+
+    <script>
+        const client = mqtt.connect('wss://://hivemq.com');
+        const topikUtama = "my_home_lampu/relay/"; 
+
+        client.on('connect', () => {
+            document.getElementById("status").innerText = "Terhubung!";
+            document.getElementById("status").style.color = "#2ecc71";
+        });
+
+        client.on('error', (err) => {
+            document.getElementById("status").innerText = "Gagal Konek";
+            document.getElementById("status").style.color = "#e74c3c";
+        });
+
+        function kirimPerintah(nomorRelay, nilai) {
+            if (client.connected) {
+                const topikTarget = topikUtama + nomorRelay;
+                client.publish(topikTarget, nilai, { retain: true });
+                console.log("Dikirim ke " + topikTarget + " -> " + nilai);
+            } else {
+                alert("Web belum terhubung ke server MQTT!");
+            }
+        }
+    </script>
+</body>
+</html>
