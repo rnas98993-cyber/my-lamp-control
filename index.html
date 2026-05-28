@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Home Kontrol ULN2803</title>
-    <!-- Perbaikan library MQTT menggunakan unpkg yang lebih stabil -->
-    <script src="https://unpkg.com"></script>
+    <!-- Library Paho MQTT yang didukung penuh oleh EMQX untuk web browser -->
+    <script src="https://cloudflare.com"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f9; padding: 20px; }
         .relay-card { background: white; padding: 15px; margin: 15px auto; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -19,7 +19,6 @@
 <body>
 
     <h1>Smart Home Web Control</h1>
-    <!-- Status awal -->
     <p>Status Server: <span id="status">Menghubungkan...</span></p>
     
     <div class="relay-card">
@@ -47,29 +46,19 @@
     </div>
 
     <script>
-        // Konfigurasi koneksi alternatif yang lebih aman untuk browser HP/Laptop
-        const opsi = {
-            connectTimeout: 4000,
-            clientId: 'web_client_' + Math.random().toString(16).substr(2, 8),
-            keepalive: 60,
-            clean: true
-        };
-
-        // Menghubungkan ke broker publik HiveMQ menggunakan WebSocket Secure (WSS)
-        const client = mqtt.connect('wss://://hivemq.com', opsi);
+        // Hubungkan ke Broker Publik EMQX via Secure WebSocket (Port: 8084)
+        const client = mqtt.connect('wss://broker.emqx.io:8084/mqtt');
         const topikUtama = "my_home_lampu/relay/"; 
 
         client.on('connect', () => {
-            // Jika berhasil, status akan langsung berubah menjadi hijau
             document.getElementById("status").innerText = "Terhubung!";
             document.getElementById("status").style.color = "#2ecc71";
-            console.log("Sukses terhubung ke Broker MQTT!");
+            console.log("Sukses terhubung ke Broker EMQX!");
         });
 
         client.on('error', (err) => {
             document.getElementById("status").innerText = "Gagal Konek";
             document.getElementById("status").style.color = "#e74c3c";
-            console.error("Koneksi error: ", err);
         });
 
         client.on('close', () => {
@@ -80,11 +69,10 @@
         function kirimPerintah(nomorRelay, nilai) {
             if (client.connected) {
                 const topikTarget = topikUtama + nomorRelay;
-                // Mengirim perintah dengan fitur 'retain' agar status terakhir tersimpan di cloud
-                client.publish(topikTarget, nilai, { qos: 0, retain: true });
+                client.publish(topikTarget, nilai, { retain: true });
                 console.log("Dikirim ke " + topikTarget + " -> " + nilai);
             } else {
-                alert("Web belum terhubung ke server MQTT! Silakan refresh halaman.");
+                alert("Belum terhubung ke server!");
             }
         }
     </script>
