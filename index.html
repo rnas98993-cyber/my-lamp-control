@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smart Home Kontrol ULN2803</title>
-    <!-- Library MQTT via CDN terpercaya -->
-    <script src="https://cloudflare.com"></script>
+    <script src="https://unpkg.com"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; background-color: #f4f4f9; padding: 20px; }
         .relay-card { background: white; padding: 15px; margin: 15px auto; max-width: 400px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -46,23 +45,17 @@
     </div>
 
     <script>
-        // Menggunakan Server Cluster HiveMQ Web-Secure resmi yang dienkripsi penuh (Port 443)
-        const serverUrl = 'wss://://hivemq.com';
+        // Menggunakan public broker dari Shiftr.io yang dijamin aktif untuk WebSocket browser
+        const serverUrl = 'wss://public:public@broker.shiftr.io';
         
-        const opsi = {
-            clientId: 'web_client_' + Math.random().toString(16).substr(2, 8),
-            keepalive: 30,
-            clean: true,
-            reconnectPeriod: 1000
-        };
-
-        const client = mqtt.connect(serverUrl, opsi);
+        const client = mqtt.connect(serverUrl, {
+            clientId: 'web_' + Math.random().toString(16).substr(2, 8)
+        });
         const topikUtama = "my_home_lampu/relay/"; 
 
         client.on('connect', () => {
             document.getElementById("status").innerText = "Terhubung!";
             document.getElementById("status").style.color = "#2ecc71";
-            console.log("Sukses terhubung dengan enkripsi!");
         });
 
         client.on('error', (err) => {
@@ -70,18 +63,13 @@
             document.getElementById("status").style.color = "#e74c3c";
         });
 
-        client.on('close', () => {
-            document.getElementById("status").innerText = "Terputus";
-            document.getElementById("status").style.color = "red";
-        });
-
         function kirimPerintah(nomorRelay, nilai) {
             if (client.connected) {
                 const topikTarget = topikUtama + nomorRelay;
-                client.publish(topikTarget, nilai, { qos: 0, retain: true });
+                client.publish(topikTarget, nilai, { retain: true });
                 console.log("Dikirim: " + topikTarget + " -> " + nilai);
             } else {
-                alert("Web belum terhubung ke server MQTT!");
+                alert("Web belum terhubung!");
             }
         }
     </script>
